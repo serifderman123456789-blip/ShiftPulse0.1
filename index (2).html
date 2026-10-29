@@ -1,0 +1,147 @@
+<!-- Kayıt & Başlangıç Modalı -->
+<div id="welcomeModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+  <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 max-w-md w-full text-white shadow-2xl">
+    <h2 class="text-2xl font-bold text-amber-400 mb-2">ShiftPulse'a Hoş Geldiniz! 👋</h2>
+    <p class="text-gray-400 text-sm mb-6">Hesaplamalarınızın size özel yapılması için lütfen bilgilerinizi girin.</p>
+    
+    <form id="registerForm" class="space-y-4">
+      <div>
+        <label class="block text-xs text-gray-400 mb-1">Adınız Soyadınız</label>
+        <input type="text" id="userNameInput" required placeholder="Örn: Ahmet Yılmaz" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-400">
+      </div>
+      <div>
+        <label class="block text-xs text-gray-400 mb-1">Aylık Net Maaş (TL)</label>
+        <input type="number" id="userSalaryInput" required placeholder="Örn: 25000" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-400">
+      </div>
+      <button type="submit" class="w-full bg-amber-400 hover:bg-amber-300 text-gray-950 font-semibold py-3 rounded-xl transition">
+        Uygulamaya Başla
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Pro Yükseltme Modalı -->
+<div id="proModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+  <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 max-w-md w-full text-white shadow-2xl relative">
+    <button onclick="closeProModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">✕</button>
+    
+    <div class="text-center mb-6">
+      <span class="bg-amber-400/10 text-amber-400 text-xs font-semibold px-3 py-1 rounded-full border border-amber-400/20">PRO SÜRÜM</span>
+      <h3 class="text-2xl font-bold mt-2">ShiftPulse PRO'ya Geçin</h3>
+      <p class="text-gray-400 text-sm mt-1">Sınırsız mesai takibi, detaylı grafikler ve yedekleme özellikleri.</p>
+    </div>
+
+    <div class="space-y-3 mb-6">
+      <!-- Aylık Plan -->
+      <label class="block p-4 border border-gray-800 rounded-xl bg-gray-800/50 hover:border-amber-400/50 cursor-pointer transition">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="font-semibold">Aylık Plan</div>
+            <div class="text-xs text-gray-400">Her ay yenilenir</div>
+          </div>
+          <div class="text-xl font-bold text-amber-400">₺10 <span class="text-xs text-gray-400">/ay</span></div>
+        </div>
+      </label>
+
+      <!-- Yıllık Plan -->
+      <label class="block p-4 border border-amber-400/40 rounded-xl bg-amber-400/5 hover:border-amber-400 cursor-pointer transition relative">
+        <span class="absolute -top-2.5 right-4 bg-amber-400 text-gray-950 text-[10px] font-bold px-2 py-0.5 rounded-full">AVANTAJLI</span>
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="font-semibold">Yıllık Plan</div>
+            <div class="text-xs text-gray-400">Yıllık tek ödeme</div>
+          </div>
+          <div class="text-xl font-bold text-amber-400">₺120 <span class="text-xs text-gray-400">/yıl</span></div>
+        </div>
+      </label>
+    </div>
+
+    <button onclick="buyPro()" class="w-full bg-amber-400 hover:bg-amber-300 text-gray-950 font-bold py-3 rounded-xl transition">
+      PRO'yu Aktifleştir
+    </button>
+  </div>
+</div>
+
+<script>
+  // Varsayılan / Başlangıç Ayarları
+  const CONFIG = {
+    ADMIN_NAME: "Serif Deniz", // Yönetici İsmi
+    PRO_PRICING: {
+      MONTHLY: 10,  // TL
+      YEARLY: 120   // TL
+    }
+  };
+
+  // Kullanıcı Verilerini Kontrol Et
+  function initUserSession() {
+    let userData = JSON.parse(localStorage.getItem("shiftpulse_user"));
+
+    // Eğer kullanıcı daha önce kayıt olmadıysa Kayıt Modalını Aç
+    if (!userData) {
+      document.getElementById("welcomeModal").classList.remove("hidden");
+    } else {
+      applyUserData(userData);
+    }
+  }
+
+  // Kayıt Formu Gönderildiğinde
+  document.getElementById("registerForm")?.addEventListener("submit", function(e) {
+    e.preventDefault();
+    const name = document.getElementById("userNameInput").value.trim();
+    const salary = parseFloat(document.getElementById("userSalaryInput").value) || 0;
+
+    // Sizin isminiz girildiyse otomatik PRO tanımlansın
+    const isOwner = name.toLowerCase() === CONFIG.ADMIN_NAME.toLowerCase();
+
+    const newUserData = {
+      name: name,
+      salary: salary,
+      isPro: isOwner, // Yönetici ise otomatik PRO
+      registeredAt: new Date().toISOString()
+    };
+
+    localStorage.setItem("shiftpulse_user", JSON.stringify(newUserData));
+    document.getElementById("welcomeModal").classList.add("hidden");
+    applyUserData(newUserData);
+  });
+
+  // Kullanıcı Verilerini Arayüze Yansıt
+  function applyUserData(user) {
+    // İsim Gösterimi
+    const nameDisplay = document.getElementById("userNameDisplay");
+    if (nameDisplay) nameDisplay.textContent = user.name;
+
+    // Pro Rozeti
+    const proBadge = document.getElementById("proBadge");
+    if (proBadge) {
+      if (user.isPro) {
+        proBadge.textContent = "PRO SÜRÜM";
+        proBadge.classList.add("bg-amber-400", "text-gray-950");
+      } else {
+        proBadge.textContent = "ÜCRETSİZ";
+        proBadge.classList.add("bg-gray-800", "text-gray-400");
+      }
+    }
+  }
+
+  // Pro Modal Kontrolleri
+  function openProModal() {
+    document.getElementById("proModal").classList.remove("hidden");
+  }
+
+  function closeProModal() {
+    document.getElementById("proModal").classList.add("hidden");
+  }
+
+  function buyPro() {
+    let userData = JSON.parse(localStorage.getItem("shiftpulse_user")) || {};
+    userData.isPro = true;
+    localStorage.setItem("shiftpulse_user", JSON.stringify(userData));
+    alert("PRO Sürüm başarıyla aktifleştirildi!");
+    closeProModal();
+    applyUserData(userData);
+  }
+
+  // Sayfa Yüklendiğinde Çalıştır
+  document.addEventListener("DOMContentLoaded", initUserSession);
+</script>
